@@ -206,6 +206,130 @@
       font-size: 0.9em;
     }
 
+    /* 모달 스타일 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100dvh;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.3s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--primary-color), #357ABD);
+      color: white;
+      padding: 25px 30px;
+      border-radius: 15px 15px 0 0;
+      position: relative;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5em;
+      text-align: center;
+    }
+
+    .close {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 5px;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .close:hover,
+    .close:focus {
+      background-color: rgba(255, 255, 255, 0.2);
+      text-decoration: none;
+    }
+
+    .modal-body {
+      padding: 30px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: calc(90vh - 140px);
+      /* 헤더와 푸터 높이를 제외 */
+    }
+
+    .modal-footer {
+      padding: 20px 30px;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--secondary-color);
+      border-radius: 0 0 15px 15px;
+      text-align: center;
+    }
+
+    .modal-footer button {
+      background-color: var(--success-color);
+      padding: 15px 30px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .modal-footer button:hover {
+      background-color: #27AE60;
+    }
+
+    .modal-footer button:disabled {
+      background-color: #BDC3C7;
+      cursor: not-allowed;
+    }
+
     .tab-container {
       display: flex;
       background-color: var(--secondary-color);
@@ -365,7 +489,7 @@
         <button onclick="resetForm()" style="flex: 1; background-color: #95a5a6;">🔄 초기화</button>
       </div>
 
-      <div id="result">
+      <div id="result" style="display: none;">
 
 
         <div class="result-section">
@@ -436,6 +560,50 @@
       <!-- 스크롤 가능한 데이터 목록 영역 -->
       <div id="savedDataList" style="max-height: calc(90vh - 300px); overflow-y: auto; padding-right: 10px;">
         <!-- 저장된 데이터가 여기에 표시됩니다 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 결과 모달 -->
+  <div id="resultModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🧮 계산 결과</h2>
+        <button class="close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="modalResult">
+          <div class="result-section">
+            <h3>비용 계산</h3>
+            <p><span class="label">현재 환율</span> <span class="value" id="modalExchangeRate"></span></p>
+            <p><span class="label">총 구매 금액</span> <span class="value" id="modalTotalPriceKRW"></span></p>
+            <p><span class="label">부자재 비용</span> <span class="value" id="modalTotalAdditionalCost"></span></p>
+            <p><span class="label">배송비</span> <span class="value" id="modalShippingFee"></span></p>
+            <p><span class="label">총 비용</span> <span class="value" id="modalTotalCost"></span></p>
+          </div>
+
+          <div class="result-section">
+            <h3>수익 계산</h3>
+            <p><span class="label">판매가(엔)</span> <span class="value" id="modalResultSellingPriceJPY"></span></p>
+            <p><span class="label">판매가(원)</span> <span class="value" id="modalResultSellingPriceKRW"></span></p>
+            <p><span class="label">할인 금액</span> <span class="value" id="modalDiscountAmount"></span></p>
+            <p><span class="label">실제 판매가</span> <span class="value" id="modalActualSellingPrice"></span></p>
+            <p><span class="label">큐텐 수수료</span> <span class="value" id="modalCoupangFeeAmount"></span></p>
+          </div>
+
+          <div class="result-section">
+            <h3>최종 결과</h3>
+            <p><span class="label">마진 금액</span> <span class="value" id="modalMarginAmount"></span></p>
+            <p><span class="label">마진율</span> <span class="value" id="modalMarginRate"></span></p>
+            <p><span class="label">부가세 환급</span> <span class="value positive" id="modalVatRefundAmount">-</span></p>
+            <p style="border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 10px;"><span
+                class="label" style="font-weight: 700; font-size: 1.1em;">실제 수익 (마진+환급)</span> <span class="value"
+                style="font-weight: 700; font-size: 1.1em;" id="modalTotalProfit"></span></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button onclick="saveCalculation()" disabled id="modalSaveBtn">📌 이 계산 저장하기</button>
       </div>
     </div>
   </div>
@@ -623,8 +791,6 @@
         return;
       }
 
-
-
       // 배송비 계산
       const shippingResult = calculateShippingFee(weight, shippingProvider, exchangeRate);
 
@@ -647,27 +813,29 @@
       // 실제 수익 (마진 + 부가세 환급)
       const totalProfit = marginAmount + vatRefundAmount;
 
-      // 결과 표시
-      document.getElementById('totalPriceKRW').textContent = productPrice.toLocaleString() + '원';
-      document.getElementById('totalAdditionalCost').textContent = additionalCost.toLocaleString() + '원';
-      document.getElementById('shippingFee').textContent = shippingResult.fee.toLocaleString() + '원';
-      document.getElementById('vatRefundAmount').textContent = '+' + vatRefundAmount.toLocaleString() + '원';
-      document.getElementById('totalCost').textContent = totalCost.toLocaleString() + '원';
-      document.getElementById('resultSellingPriceJPY').textContent = sellingPriceJPY.toFixed(0) + '엔';
-      document.getElementById('resultSellingPriceKRW').textContent = sellingPriceKRW.toLocaleString() + '원';
-      document.getElementById('discountAmount').textContent = discountAmount.toLocaleString() + '원';
-      document.getElementById('actualSellingPrice').textContent = actualSellingPrice.toLocaleString() + '원';
-      document.getElementById('coupangFeeAmount').textContent = coupangFeeAmount.toLocaleString() + '원';
-      document.getElementById('marginAmount').textContent = marginAmount.toLocaleString() + '원';
-      document.getElementById('marginRate').textContent = marginRate.toFixed(2) + '%';
-      document.getElementById('totalProfit').textContent = totalProfit.toLocaleString() + '원';
-
-      document.getElementById('result').style.display = 'block';
-      updateResultStyles(marginAmount, marginRate, totalProfit);
+      // 팝업으로 결과 표시
+      showResultPopup({
+        productPrice,
+        additionalCost,
+        shippingFee: shippingResult.fee,
+        vatRefundAmount,
+        totalCost,
+        sellingPriceJPY,
+        sellingPriceKRW,
+        discountAmount,
+        actualSellingPrice,
+        coupangFeeAmount,
+        marginAmount,
+        marginRate,
+        totalProfit
+      });
 
       // 저장하기 버튼 활성화
       document.getElementById('saveBtn').disabled = false;
+      document.getElementById('modalSaveBtn').disabled = false;
     }
+
+
 
     function updateResultStyles(marginAmount, marginRate, totalProfit) {
       const marginAmountElement = document.getElementById('marginAmount');
@@ -677,6 +845,92 @@
       marginAmountElement.className = marginAmount >= 0 ? 'value positive' : 'value negative';
       marginRateElement.className = marginRate >= 0 ? 'value positive' : 'value negative';
       totalProfitElement.className = totalProfit >= 0 ? 'value positive' : 'value negative';
+    }
+
+    // 결과 모달 표시 함수
+    function showResultPopup(results, showSaveButton = true, exchangeRateForDisplay = null) {
+      // 환율 정보 설정 (불러오기 시 저장된 환율, 계산 시 현재 환율)
+      const exchangeRate = exchangeRateForDisplay || parseFloat(document.getElementById('exchangeRate').value);
+
+      // 모달 내용 업데이트
+      document.getElementById('modalExchangeRate').textContent = exchangeRate.toFixed(2) + '원/엔';
+      document.getElementById('modalTotalPriceKRW').textContent = results.productPrice.toLocaleString() + '원';
+      document.getElementById('modalTotalAdditionalCost').textContent = results.additionalCost.toLocaleString() + '원';
+      document.getElementById('modalShippingFee').textContent = results.shippingFee.toLocaleString() + '원';
+      document.getElementById('modalVatRefundAmount').textContent = '+' + results.vatRefundAmount.toLocaleString() + '원';
+      document.getElementById('modalTotalCost').textContent = results.totalCost.toLocaleString() + '원';
+      document.getElementById('modalResultSellingPriceJPY').textContent = results.sellingPriceJPY.toFixed(0) + '엔';
+      document.getElementById('modalResultSellingPriceKRW').textContent = results.sellingPriceKRW.toLocaleString() + '원';
+      document.getElementById('modalDiscountAmount').textContent = results.discountAmount.toLocaleString() + '원';
+      document.getElementById('modalActualSellingPrice').textContent = results.actualSellingPrice.toLocaleString() + '원';
+      document.getElementById('modalCoupangFeeAmount').textContent = results.coupangFeeAmount.toLocaleString() + '원';
+      document.getElementById('modalMarginAmount').textContent = results.marginAmount.toLocaleString() + '원';
+      document.getElementById('modalMarginRate').textContent = results.marginRate.toFixed(2) + '%';
+      document.getElementById('modalTotalProfit').textContent = results.totalProfit.toLocaleString() + '원';
+
+      // 스타일 업데이트 (모달용)
+      updateModalResultStyles(results.marginAmount, results.marginRate, results.totalProfit);
+
+      // 기존 결과 화면도 업데이트 (저장 기능을 위해)
+      document.getElementById('totalPriceKRW').textContent = results.productPrice.toLocaleString() + '원';
+      document.getElementById('totalAdditionalCost').textContent = results.additionalCost.toLocaleString() + '원';
+      document.getElementById('shippingFee').textContent = results.shippingFee.toLocaleString() + '원';
+      document.getElementById('vatRefundAmount').textContent = '+' + results.vatRefundAmount.toLocaleString() + '원';
+      document.getElementById('totalCost').textContent = results.totalCost.toLocaleString() + '원';
+      document.getElementById('resultSellingPriceJPY').textContent = results.sellingPriceJPY.toFixed(0) + '엔';
+      document.getElementById('resultSellingPriceKRW').textContent = results.sellingPriceKRW.toLocaleString() + '원';
+      document.getElementById('discountAmount').textContent = results.discountAmount.toLocaleString() + '원';
+      document.getElementById('actualSellingPrice').textContent = results.actualSellingPrice.toLocaleString() + '원';
+      document.getElementById('coupangFeeAmount').textContent = results.coupangFeeAmount.toLocaleString() + '원';
+      document.getElementById('marginAmount').textContent = results.marginAmount.toLocaleString() + '원';
+      document.getElementById('marginRate').textContent = results.marginRate.toFixed(2) + '%';
+      document.getElementById('totalProfit').textContent = results.totalProfit.toLocaleString() + '원';
+
+      updateResultStyles(results.marginAmount, results.marginRate, results.totalProfit);
+
+      // 저장 버튼 표시/숨김 제어
+      const modalFooter = document.querySelector('.modal-footer');
+      const modalSaveBtn = document.getElementById('modalSaveBtn');
+
+      if (showSaveButton) {
+        modalFooter.style.display = 'block';
+        modalSaveBtn.disabled = false;
+      } else {
+        modalFooter.style.display = 'none';
+      }
+
+      // 모달 표시
+      document.getElementById('resultModal').classList.add('show');
+
+      // body 스크롤 막기
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 모달용 스타일 업데이트 함수
+    function updateModalResultStyles(marginAmount, marginRate, totalProfit) {
+      const modalMarginAmountElement = document.getElementById('modalMarginAmount');
+      const modalMarginRateElement = document.getElementById('modalMarginRate');
+      const modalTotalProfitElement = document.getElementById('modalTotalProfit');
+
+      modalMarginAmountElement.className = marginAmount >= 0 ? 'value positive' : 'value negative';
+      modalMarginRateElement.className = marginRate >= 0 ? 'value positive' : 'value negative';
+      modalTotalProfitElement.className = totalProfit >= 0 ? 'value positive' : 'value negative';
+    }
+
+    // 모달 닫기 함수
+    function closeModal() {
+      document.getElementById('resultModal').classList.remove('show');
+
+      // body 스크롤 복구
+      document.body.style.overflow = 'auto';
+    }
+
+    // 모달 외부 클릭 시 닫기
+    window.onclick = function (event) {
+      const modal = document.getElementById('resultModal');
+      if (event.target == modal) {
+        closeModal();
+      }
     }
 
     // 계산 결과 저장
@@ -721,7 +975,7 @@
 
       // 로컬스토리지에서 기존 데이터 가져오기
       const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
-      savedData.push(data);
+      savedData.unshift(data); // 맨 앞에 추가 (최신 순서)
 
       // 로컬스토리지에 저장
       localStorage.setItem('marginCalculations', JSON.stringify(savedData));
@@ -742,7 +996,7 @@
 
       list.innerHTML = '';
 
-      savedData.reverse().forEach(data => {
+      savedData.forEach(data => {
         const item = document.createElement('div');
         item.className = 'saved-item';
         item.innerHTML = `
@@ -759,7 +1013,7 @@
           <div class="saved-item-actions">
             <button onclick="loadCalculation(${data.id})" style="background-color: var(--primary-color);">불러오기</button>
             <button onclick="deleteSavedItem(${data.id})" style="background-color: var(--danger-color);">삭제</button>
-          </div>g
+          </div>
         `;
         list.appendChild(item);
       });
@@ -767,13 +1021,16 @@
 
     // 저장된 계산 불러오기
     function loadCalculation(id) {
+      console.log('불러오기 요청 ID:', id);
       const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+      console.log('저장된 데이터:', savedData.map(item => ({ id: item.id, name: item.productName })));
       const data = savedData.find(item => item.id === id);
+      console.log('찾은 데이터:', data ? data.productName : '없음');
 
-      if (!data) return;
-
-      // 계산기 탭으로 자동 전환
-      switchTab('calculator');
+      if (!data) {
+        alert(`ID ${id}에 해당하는 데이터를 찾을 수 없습니다.`);
+        return;
+      }
 
       // 환율은 현재 환율 유지 (저장된 환율 무시)
       // document.getElementById('exchangeRate').value = data.inputs.exchangeRate;
@@ -802,22 +1059,69 @@
       document.getElementById('coupangFee').value = data.inputs.coupangFeeRate;
       document.getElementById('vatRefund').value = data.inputs.vatRefundRate || 10;
 
-      // 자동으로 계산 실행
-      calculate();
+      // 저장된 결과값을 그대로 사용 (새로 계산하지 않음)
+      showResultPopup({
+        productPrice: data.inputs.productPrice,
+        additionalCost: data.inputs.additionalCost,
+        shippingFee: data.results.shippingFee,
+        vatRefundAmount: data.results.vatRefundAmount,
+        totalCost: data.results.totalCost,
+        sellingPriceJPY: data.inputs.sellingPriceJPY,
+        sellingPriceKRW: data.inputs.sellingPriceKRW,
+        discountAmount: (data.inputs.sellingPriceKRW * (data.inputs.discountRate / 100)),
+        actualSellingPrice: (data.inputs.sellingPriceKRW - (data.inputs.sellingPriceKRW * (data.inputs.discountRate / 100))),
+        coupangFeeAmount: ((data.inputs.sellingPriceKRW - (data.inputs.sellingPriceKRW * (data.inputs.discountRate / 100))) * (data.inputs.coupangFeeRate / 100)),
+        marginAmount: data.results.marginAmount,
+        marginRate: data.results.marginRate,
+        totalProfit: data.results.totalProfit
+      }, false, data.inputs.exchangeRate); // 저장 버튼 숨김, 저장된 환율 사용
+
+      // 기존 결과 화면도 업데이트 (저장된 값 그대로 사용)
+      document.getElementById('totalPriceKRW').textContent = data.inputs.productPrice.toLocaleString() + '원';
+      document.getElementById('totalAdditionalCost').textContent = data.inputs.additionalCost.toLocaleString() + '원';
+      document.getElementById('shippingFee').textContent = data.results.shippingFee.toLocaleString() + '원';
+      document.getElementById('vatRefundAmount').textContent = '+' + data.results.vatRefundAmount.toLocaleString() + '원';
+      document.getElementById('totalCost').textContent = data.results.totalCost.toLocaleString() + '원';
+      document.getElementById('resultSellingPriceJPY').textContent = data.inputs.sellingPriceJPY.toFixed(0) + '엔';
+      document.getElementById('resultSellingPriceKRW').textContent = data.inputs.sellingPriceKRW.toLocaleString() + '원';
+      document.getElementById('discountAmount').textContent = (data.inputs.sellingPriceKRW * (data.inputs.discountRate / 100)).toLocaleString() + '원';
+      document.getElementById('actualSellingPrice').textContent = (data.inputs.sellingPriceKRW - (data.inputs.sellingPriceKRW * (data.inputs.discountRate / 100))).toLocaleString() + '원';
+      document.getElementById('coupangFeeAmount').textContent = ((data.inputs.sellingPriceKRW - (data.inputs.sellingPriceKRW * (data.inputs.discountRate / 100))) * (data.inputs.coupangFeeRate / 100)).toLocaleString() + '원';
+      document.getElementById('marginAmount').textContent = data.results.marginAmount.toLocaleString() + '원';
+      document.getElementById('marginRate').textContent = data.results.marginRate.toFixed(2) + '%';
+      document.getElementById('totalProfit').textContent = data.results.totalProfit.toLocaleString() + '원';
+
+      updateResultStyles(data.results.marginAmount, data.results.marginRate, data.results.totalProfit);
+
+      // 저장하기 버튼 활성화
+      document.getElementById('saveBtn').disabled = false;
 
       const currentRate = parseFloat(document.getElementById('exchangeRate').value);
-      alert(`계산 데이터를 불러왔습니다!\n\n💡 현재 환율(${currentRate.toFixed(2)}원/엔)이 적용되었습니다.`);
+      alert(`계산 데이터를 불러왔습니다!\n\n💡 저장 당시의 결과값이 표시됩니다.`);
     }
 
     // 저장된 항목 삭제
     function deleteSavedItem(id) {
+      console.log('삭제 요청 ID:', id);
+
       if (!confirm('이 항목을 삭제하시겠습니까?')) return;
 
       const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+      console.log('삭제 전 데이터 개수:', savedData.length);
+      console.log('삭제할 항목:', savedData.find(item => item.id === id)?.productName || '없음');
+
       const filteredData = savedData.filter(item => item.id !== id);
+      console.log('삭제 후 데이터 개수:', filteredData.length);
+
       localStorage.setItem('marginCalculations', JSON.stringify(filteredData));
 
       loadSavedData();
+
+      if (savedData.length === filteredData.length) {
+        alert(`ID ${id}에 해당하는 데이터를 찾을 수 없어서 삭제되지 않았습니다.`);
+      } else {
+        alert('삭제가 완료되었습니다.');
+      }
     }
 
     // 전체 데이터 삭제
@@ -1209,6 +1513,7 @@
 
             if (hasError) return; // 필수 데이터가 없으면 건너뛰기
             const calculationData = {
+              id: Date.now() + rowCount, // 고유한 ID 생성
               productName: String(rowData[2] || ''),
               savedAt: String(rowData[3] || new Date().toLocaleString()),
               inputs: {
