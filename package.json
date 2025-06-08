@@ -4,56 +4,18 @@
   "version": "1.0.0",
   "description": "큐텐 마진율 계산기",
   "author": "김기태",
-  "main": "electron.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "electron": "electron .",
-    "electron-dev": "electron . --dev",
-    "build-electron": "electron-builder",
-    "dist": "electron-builder --publish=never",
-    "dist-mac": "electron-builder --mac --publish=never",
-    "dist-win": "electron-builder --win --publish=never"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "exceljs": "^4.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.19",
-    "@vitejs/plugin-react": "^4.2.1",
-    "electron": "^36.4.0",
-    "electron-builder": "^26.0.12",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5"
-  },
-  "build": {
-    "appId": "com.quten.margin-calculator",
-    "productName": "큐텐 마진율 계산기",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "electron.js",
-      "index.html",
-      "node_modules/**/*"
-    ],
-    "win": {
-      "target": "portable"
-    },
-    "mac": {
-      "target": "dmg",
-      "category": "public.app-category.productivity"
-    },
-    "portable": {
-      "artifactName": "큐텐-마진율-계산기-${version}.exe"
-    },
-    "dmg": {
-      "artifactName": "큐텐-마진율-계산기-${version}.dmg"
-    }
+    "@types/node": "^20.10.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
   }
 }
