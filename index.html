@@ -410,6 +410,21 @@
       <div
         style=" background-color: white; z-index: 10; padding: 20px 0; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
         <h2 style="margin: 0 0 15px 0;">저장된 계산 목록</h2>
+
+        <!-- 드래그앤드롭 영역 -->
+        <div id="dropZone"
+          style="border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 15px; background-color: #f9f9f9; transition: all 0.3s ease; cursor: pointer;">
+          <div style="color: #666; pointer-events: none;">
+            <span style="font-size: 24px;">📁</span><br>
+            <strong>엑셀 파일을 여기에 드래그하거나 클릭하여 업로드</strong><br>
+            <small>⚠️ 기존 데이터를 모두 대체합니다</small><br>
+            <small style="color: #999; margin-top: 5px; display: block;">
+              💡 이 계산기에서 "엑셀로 내보내기"로 생성한 파일만 지원
+            </small>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+        </div>
+
         <div style="display: flex; gap: 10px;">
           <button onclick="exportToExcel()" style="background-color: var(--success-color); flex: 1; padding: 12px;">📊
             엑셀로 내보내기</button>
@@ -542,9 +557,13 @@
       // 선택된 탭 컨텐츠 보이기
       document.getElementById(tabName + '-tab').classList.add('active');
 
-      // 저장 목록 탭으로 전환시 데이터 로드
+      // 저장 목록 탭으로 전환시 데이터 로드 및 파일 업로드 초기화
       if (tabName === 'saved-list') {
         loadSavedData();
+        // 약간의 지연 후 파일 업로드 초기화 (DOM이 완전히 렌더링된 후)
+        setTimeout(() => {
+          initializeFileUpload();
+        }, 100);
       }
     }
 
@@ -945,6 +964,250 @@
       };
       return providers[code] || code;
     }
+
+    // 배송대행지 한글명을 코드로 변환
+    function getShippingProviderCode(name) {
+      const providers = {
+        'KSE 항공': 'KSE_air',
+        'KSE 해상': 'KSE_sea',
+        'Synergy 슬림': 'Synergy_slim',
+        'Synergy SVIP': 'Synergy_svip',
+        '트랙슬로시스': 'Trackslosis'
+      };
+      return providers[name] || name;
+    }
+
+    // 드래그앤드롭 및 파일 업로드 초기화
+    function initializeFileUpload() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+
+      console.log('initializeFileUpload 호출됨');
+      console.log('dropZone:', dropZone);
+      console.log('fileInput:', fileInput);
+
+      if (!dropZone || !fileInput) {
+        console.error('dropZone 또는 fileInput을 찾을 수 없습니다');
+        return;
+      }
+
+      // 기존 이벤트 리스너 제거 (중복 방지)
+      dropZone.replaceWith(dropZone.cloneNode(true));
+      const newDropZone = document.getElementById('dropZone');
+      const newFileInput = document.getElementById('fileInput');
+
+      // 클릭 이벤트
+      newDropZone.addEventListener('click', (e) => {
+        console.log('dropZone 클릭됨');
+        newFileInput.click();
+      });
+
+      // 드래그오버 이벤트
+      newDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        console.log('dragover 이벤트');
+        newDropZone.style.borderColor = 'var(--primary-color)';
+        newDropZone.style.backgroundColor = '#e8f4fd';
+      });
+
+      // 드래그리브 이벤트
+      newDropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        console.log('dragleave 이벤트');
+        newDropZone.style.borderColor = '#ccc';
+        newDropZone.style.backgroundColor = '#f9f9f9';
+      });
+
+      // 드롭 이벤트
+      newDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        console.log('drop 이벤트', e.dataTransfer.files);
+        newDropZone.style.borderColor = '#ccc';
+        newDropZone.style.backgroundColor = '#f9f9f9';
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFileUpload(files[0]);
+        }
+      });
+
+      // 파일 입력 변경 이벤트
+      newFileInput.addEventListener('change', (e) => {
+        console.log('fileInput 변경됨', e.target.files);
+        if (e.target.files.length > 0) {
+          handleFileUpload(e.target.files[0]);
+        }
+      });
+
+      console.log('모든 이벤트 리스너가 추가되었습니다');
+    }
+
+    // 파일 업로드 처리
+    async function handleFileUpload(file) {
+      // 파일 확장자 검사
+      const fileName = file.name.toLowerCase();
+      if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+        alert('엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.');
+        return;
+      }
+
+      // 확인 대화상자
+      const confirmMessage = `엑셀 파일을 가져오시겠습니까?\n\n⚠️ 주의: 현재 저장된 모든 데이터가 삭제되고 엑셀 파일의 데이터로 대체됩니다.\n\n파일명: ${file.name}`;
+      if (!confirm(confirmMessage)) {
+        // 파일 입력 초기화
+        document.getElementById('fileInput').value = '';
+        return;
+      }
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        const arrayBuffer = await file.arrayBuffer();
+        await workbook.xlsx.load(arrayBuffer);
+
+        const worksheet = workbook.getWorksheet(1); // 첫 번째 시트
+        if (!worksheet) {
+          alert('워크시트를 찾을 수 없습니다.');
+          return;
+        }
+
+        // 헤더 검증
+        const expectedHeaders = [
+          '순번', '제품명', '저장일시', '환율', '제품원가', '판매가(원)', '판매가(엔)',
+          '할인율(%)', '부자재비용', '무게(kg)', '배송대행지', '큐텐수수료(%)',
+          '총비용', '배송비', '부가세환급', '마진금액', '마진율(%)', '실제수익'
+        ];
+
+        const headerRow = worksheet.getRow(1);
+        const actualHeaders = [];
+
+        // 실제 헤더 읽기
+        headerRow.eachCell((cell, colNumber) => {
+          actualHeaders.push(String(cell.value || '').trim());
+        });
+
+        // 헤더 검증
+        let isValidFormat = true;
+        const missingHeaders = [];
+
+        for (let i = 0; i < expectedHeaders.length; i++) {
+          if (actualHeaders[i] !== expectedHeaders[i]) {
+            isValidFormat = false;
+            if (!actualHeaders[i]) {
+              missingHeaders.push(`${i + 1}번째 컬럼이 비어있음`);
+            } else {
+              missingHeaders.push(`${i + 1}번째 컬럼: "${actualHeaders[i]}" (예상: "${expectedHeaders[i]}")`);
+            }
+          }
+        }
+
+        if (!isValidFormat) {
+          let errorMessage = '❌ 엑셀 파일 형식이 올바르지 않습니다.\n\n';
+          errorMessage += '🔍 문제점:\n';
+          missingHeaders.slice(0, 5).forEach(header => {
+            errorMessage += `• ${header}\n`;
+          });
+          if (missingHeaders.length > 5) {
+            errorMessage += `• ... 외 ${missingHeaders.length - 5}개 더\n`;
+          }
+          errorMessage += '\n📋 올바른 형식:\n';
+          errorMessage += '이 프로그램에서 "엑셀로 내보내기"로 생성된 파일만 가져올 수 있습니다.\n\n';
+          errorMessage += '💡 해결방법:\n';
+          errorMessage += '1. 이 계산기에서 데이터를 계산하고 저장\n';
+          errorMessage += '2. "엑셀로 내보내기" 버튼으로 파일 생성\n';
+          errorMessage += '3. 생성된 파일만 가져오기에 사용';
+
+          alert(errorMessage);
+          return;
+        }
+
+        const importedData = [];
+        let rowCount = 0;
+
+        // 헤더 행 건너뛰고 데이터 읽기 (2행부터)
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return; // 헤더 행 건너뛰기
+
+          const rowData = row.values;
+          if (!rowData[2] || String(rowData[2]).trim() === '') return; // 제품명이 없으면 건너뛰기
+
+          try {
+            // 필수 데이터 검증
+            const requiredFields = {
+              '제품명': rowData[2],
+              '환율': rowData[4],
+              '제품원가': rowData[5],
+              '판매가(원)': rowData[6],
+              '무게': rowData[10]
+            };
+
+            let hasError = false;
+            for (const [fieldName, value] of Object.entries(requiredFields)) {
+              if (!value || (typeof value === 'number' && value <= 0)) {
+                console.warn(`행 ${rowNumber}: ${fieldName} 필드가 비어있거나 잘못된 값입니다.`);
+                hasError = true;
+              }
+            }
+
+            if (hasError) return; // 필수 데이터가 없으면 건너뛰기
+            const calculationData = {
+              productName: String(rowData[2] || ''),
+              savedAt: String(rowData[3] || new Date().toLocaleString()),
+              inputs: {
+                exchangeRate: Number(rowData[4]) || 0,
+                productPrice: Number(rowData[5]) || 0,
+                sellingPriceKRW: Number(rowData[6]) || 0,
+                sellingPriceJPY: Number(rowData[7]) || 0,
+                discountRate: Number(rowData[8]) || 0,
+                additionalCost: Number(rowData[9]) || 0,
+                weight: Number(rowData[10]) || 0,
+                shippingProvider: getShippingProviderCode(String(rowData[11] || '')),
+                coupangFeeRate: Number(rowData[12]) || 0
+              },
+              results: {
+                totalCost: Number(rowData[13]) || 0,
+                shippingFee: Number(rowData[14]) || 0,
+                vatRefundAmount: Number(rowData[15]) || 0,
+                marginAmount: Number(rowData[16]) || 0,
+                marginRate: Number(rowData[17]) || 0,
+                totalProfit: Number(rowData[18]) || 0
+              }
+            };
+
+            importedData.push(calculationData);
+            rowCount++;
+          } catch (error) {
+            console.warn(`행 ${rowNumber} 처리 중 오류:`, error);
+          }
+        });
+
+        if (importedData.length === 0) {
+          alert('가져올 수 있는 데이터가 없습니다.');
+          return;
+        }
+
+        // 기존 데이터 삭제 후 새 데이터 저장
+        localStorage.setItem('marginCalculations', JSON.stringify(importedData));
+
+        // 화면 업데이트
+        loadSavedData();
+
+        alert(`성공적으로 가져왔습니다!\n가져온 데이터: ${rowCount}개`);
+
+      } catch (error) {
+        console.error('파일 읽기 오류:', error);
+        alert('파일을 읽는 중 오류가 발생했습니다.\n파일 형식을 확인해주세요.');
+      } finally {
+        // 파일 입력 초기화
+        document.getElementById('fileInput').value = '';
+      }
+    }
+
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function () {
+      updateExchangeRate();
+      loadSavedData();
+      // 초기에는 저장목록 탭이 숨겨져 있으므로 initializeFileUpload는 탭 전환 시에만 호출
+    });
   </script>
 </body>
 
