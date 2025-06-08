@@ -698,7 +698,7 @@
         productName: productName,
         savedAt: new Date().toLocaleString(),
         inputs: {
-          exchangeRate: parseFloat(document.getElementById('exchangeRate').value),
+          exchangeRate: parseFloat(document.getElementById('exchangeRate').value), // 저장 시점의 현재 환율
           productPrice: parseFloat(document.getElementById('productPrice').value),
           sellingPriceKRW: parseFloat(document.getElementById('sellingPriceKRW').value),
           sellingPriceJPY: parseFloat(document.getElementById('sellingPriceJPY').value),
@@ -706,7 +706,8 @@
           additionalCost: parseFloat(document.getElementById('additionalCost').value) || 0,
           weight: parseFloat(document.getElementById('weight').value) || 0,
           shippingProvider: document.getElementById('shippingProvider').value,
-          coupangFeeRate: parseFloat(document.getElementById('coupangFee').value) || 0
+          coupangFeeRate: parseFloat(document.getElementById('coupangFee').value) || 0,
+          vatRefundRate: parseFloat(document.getElementById('vatRefund').value) || 10
         },
         results: {
           totalCost: parseFloat(document.getElementById('totalCost').textContent.replace(/[원,]/g, '')),
@@ -749,7 +750,7 @@
           <p style="color: #666; font-size: 0.8em; margin-bottom: 10px;">저장일시: ${data.savedAt}</p>
           <div class="saved-item-data">
             <p><strong>제품원가:</strong> ${data.inputs.productPrice.toLocaleString()}원</p>
-            <p><strong>판매가:</strong> ${data.inputs.sellingPriceKRW.toLocaleString()}원 (${data.inputs.sellingPriceJPY}엔)</p>
+            <p><strong>판매가:</strong> ${data.inputs.sellingPriceKRW.toLocaleString()}원 (${Number(data.inputs.sellingPriceJPY).toLocaleString()}엔)</p>
             <p><strong>총비용:</strong> ${data.results.totalCost.toLocaleString()}원</p>
             <p><strong>마진:</strong> ${data.results.marginAmount.toLocaleString()}원 (${data.results.marginRate.toFixed(2)}%)</p>
             <p><strong>부가세환급:</strong> +${data.results.vatRefundAmount.toLocaleString()}원</p>
@@ -774,21 +775,38 @@
       // 계산기 탭으로 자동 전환
       switchTab('calculator');
 
-      // 입력 필드에 값 설정
-      document.getElementById('exchangeRate').value = data.inputs.exchangeRate;
+      // 환율은 현재 환율 유지 (저장된 환율 무시)
+      // document.getElementById('exchangeRate').value = data.inputs.exchangeRate;
       document.getElementById('productPrice').value = data.inputs.productPrice;
       document.getElementById('sellingPriceKRW').value = data.inputs.sellingPriceKRW;
       document.getElementById('sellingPriceJPY').value = data.inputs.sellingPriceJPY;
       document.getElementById('discountRate').value = data.inputs.discountRate;
       document.getElementById('additionalCost').value = data.inputs.additionalCost;
       document.getElementById('weight').value = data.inputs.weight;
-      document.getElementById('shippingProvider').value = data.inputs.shippingProvider;
+
+      // 배송대행지 설정 디버깅
+      const shippingProvider = data.inputs.shippingProvider;
+      console.log(`불러오기 - 저장된 배송대행지: "${shippingProvider}"`);
+
+      const shippingSelect = document.getElementById('shippingProvider');
+      const validOptions = ['KSE_air', 'KSE_sea', 'Synergy_slim', 'Synergy_svip', 'Trackslosis'];
+
+      if (validOptions.includes(shippingProvider)) {
+        shippingSelect.value = shippingProvider;
+        console.log(`불러오기 - 배송대행지 설정 성공: "${shippingSelect.value}"`);
+      } else {
+        console.warn(`불러오기 - 유효하지 않은 배송대행지: "${shippingProvider}" → 기본값 사용`);
+        shippingSelect.value = 'KSE_air'; // 기본값
+      }
+
       document.getElementById('coupangFee').value = data.inputs.coupangFeeRate;
+      document.getElementById('vatRefund').value = data.inputs.vatRefundRate || 10;
 
       // 자동으로 계산 실행
       calculate();
 
-      alert('계산 데이터를 불러왔습니다!');
+      const currentRate = parseFloat(document.getElementById('exchangeRate').value);
+      alert(`계산 데이터를 불러왔습니다!\n\n💡 현재 환율(${currentRate.toFixed(2)}원/엔)이 적용되었습니다.`);
     }
 
     // 저장된 항목 삭제
@@ -853,7 +871,7 @@
       const headers = [
         '순번', '제품명', '저장일시', '환율', '제품원가', '판매가(원)', '판매가(엔)',
         '할인율(%)', '부자재비용', '무게(kg)', '배송대행지', '큐텐수수료(%)',
-        '총비용', '배송비', '부가세환급', '마진금액', '마진율(%)', '실제수익'
+        '부가세환급률(%)', '총비용', '배송비', '부가세환급', '마진율(%)', '마진금액', '실제수익'
       ];
 
       // 헤더 추가
@@ -877,33 +895,37 @@
         };
       });
 
+      // 현재 환율 가져오기
+      const currentExchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+
       // 데이터 추가
       savedData.forEach((item, index) => {
         const row = [
           index + 1,
           item.productName,
           item.savedAt,
-          item.inputs.exchangeRate,
-          item.inputs.productPrice,
-          item.inputs.sellingPriceKRW,
-          item.inputs.sellingPriceJPY,
-          item.inputs.discountRate,
-          item.inputs.additionalCost,
-          item.inputs.weight,
+          currentExchangeRate, // 항상 현재 환율 사용
+          Number(item.inputs.productPrice) || 0,    // 확실히 Number로 변환
+          Number(item.inputs.sellingPriceKRW) || 0,
+          Number(item.inputs.sellingPriceJPY) || 0,
+          Number(item.inputs.discountRate) || 0,
+          Number(item.inputs.additionalCost) || 0,
+          Number(item.inputs.weight) || 0,
           getShippingProviderName(item.inputs.shippingProvider),
-          item.inputs.coupangFeeRate,
-          item.results.totalCost,
-          item.results.shippingFee,
-          item.results.vatRefundAmount,
-          item.results.marginAmount,
-          item.results.marginRate.toFixed(2),
-          item.results.totalProfit
+          Number(item.inputs.coupangFeeRate) || 0,
+          Number(item.inputs.vatRefundRate) || 10,
+          Number(item.results.totalCost) || 0,
+          Number(item.results.shippingFee) || 0,
+          Number(item.results.vatRefundAmount) || 0,
+          Number(item.results.marginRate) || 0,      // 마진율이 먼저
+          Number(item.results.marginAmount) || 0,    // 마진금액이 나중
+          Number(item.results.totalProfit) || 0
         ];
 
         const dataRow = worksheet.addRow(row);
 
         // 데이터 행 스타일링
-        dataRow.eachCell((cell) => {
+        dataRow.eachCell((cell, colNumber) => {
           cell.border = {
             top: { style: 'thin' },
             left: { style: 'thin' },
@@ -911,29 +933,48 @@
             right: { style: 'thin' }
           };
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          // 천 단위 콤마가 필요한 컬럼들
+          const commaFormatColumns = [5, 6, 7, 10, 14, 15, 16, 18, 19];
+          // 제품원가, 판매가(원), 판매가(엔), 무게, 총비용, 배송비, 부가세환급, 마진금액, 실제수익
+
+          if (commaFormatColumns.includes(colNumber)) {
+            // 디버깅: 셀 값과 타입 확인
+            console.log(`컬럼 ${colNumber}: 값=${cell.value}, 타입=${typeof cell.value}`);
+
+            // 값이 숫자인지 확인하고 강제 변환
+            if (typeof cell.value === 'string' && !isNaN(cell.value)) {
+              cell.value = Number(cell.value);
+            }
+
+            // 엑셀 콤마 버튼과 동일한 형식 적용
+            cell.numFmt = '#,##0';
+            cell.type = ExcelJS.ValueType.Number; // 타입 강제 지정
+          }
         });
       });
 
-      // 컬럼 너비 설정
+      // 컬럼 너비 및 형식 설정
       worksheet.columns = [
         { width: 8 },   // 순번
         { width: 25 },  // 제품명
         { width: 20 },  // 저장일시
-        { width: 10 },  // 환율
-        { width: 12 },  // 제품원가
-        { width: 12 },  // 판매가(원)
-        { width: 12 },  // 판매가(엔)
+        { width: 10, numFmt: '#,##0' },  // 환율
+        { width: 12, numFmt: '#,##0' },  // 제품원가
+        { width: 12, numFmt: '#,##0' },  // 판매가(원)
+        { width: 12, numFmt: '#,##0' },  // 판매가(엔)
         { width: 12 },  // 할인율
-        { width: 12 },  // 부자재비용
-        { width: 10 },  // 무게
+        { width: 12, numFmt: '#,##0' },  // 부자재비용
+        { width: 10, numFmt: '#,##0' },  // 무게
         { width: 18 },  // 배송대행지
         { width: 14 },  // 큐텐수수료
-        { width: 12 },  // 총비용
-        { width: 12 },  // 배송비
-        { width: 12 },  // 부가세환급
-        { width: 12 },  // 마진금액
+        { width: 14 },  // 부가세환급률
+        { width: 12, numFmt: '#,##0' },  // 총비용
+        { width: 12, numFmt: '#,##0' },  // 배송비
+        { width: 12, numFmt: '#,##0' },  // 부가세환급
         { width: 12 },  // 마진율
-        { width: 12 }   // 실제수익
+        { width: 12, numFmt: '#,##0' },  // 마진금액
+        { width: 12, numFmt: '#,##0' }   // 실제수익
       ];
 
       // 파일명 생성 (현재 날짜/시간 포함)
@@ -974,7 +1015,25 @@
         'Synergy SVIP': 'Synergy_svip',
         '트랙슬로시스': 'Trackslosis'
       };
-      return providers[name] || name;
+
+      const trimmedName = String(name || '').trim();
+
+      // 정확히 매칭되는 경우
+      if (providers[trimmedName]) {
+        console.log(`배송대행지 변환 성공: "${trimmedName}" → "${providers[trimmedName]}"`);
+        return providers[trimmedName];
+      }
+
+      // 이미 코드 형태인 경우 그대로 반환
+      const validCodes = ['KSE_air', 'KSE_sea', 'Synergy_slim', 'Synergy_svip', 'Trackslosis'];
+      if (validCodes.includes(trimmedName)) {
+        console.log(`배송대행지 코드 유지: "${trimmedName}"`);
+        return trimmedName;
+      }
+
+      // 기본값으로 첫 번째 옵션 반환
+      console.warn(`배송대행지 변환 실패: "${trimmedName}" → 기본값 "KSE_air" 사용`);
+      return 'KSE_air';
     }
 
     // 드래그앤드롭 및 파일 업로드 초기화
@@ -1074,7 +1133,7 @@
         const expectedHeaders = [
           '순번', '제품명', '저장일시', '환율', '제품원가', '판매가(원)', '판매가(엔)',
           '할인율(%)', '부자재비용', '무게(kg)', '배송대행지', '큐텐수수료(%)',
-          '총비용', '배송비', '부가세환급', '마진금액', '마진율(%)', '실제수익'
+          '부가세환급률(%)', '총비용', '배송비', '부가세환급', '마진율(%)', '마진금액', '실제수익'
         ];
 
         const headerRow = worksheet.getRow(1);
@@ -1161,15 +1220,16 @@
                 additionalCost: Number(rowData[9]) || 0,
                 weight: Number(rowData[10]) || 0,
                 shippingProvider: getShippingProviderCode(String(rowData[11] || '')),
-                coupangFeeRate: Number(rowData[12]) || 0
+                coupangFeeRate: Number(rowData[12]) || 0,
+                vatRefundRate: Number(rowData[13]) || 10 // 부가세환급률 추가
               },
               results: {
-                totalCost: Number(rowData[13]) || 0,
-                shippingFee: Number(rowData[14]) || 0,
-                vatRefundAmount: Number(rowData[15]) || 0,
-                marginAmount: Number(rowData[16]) || 0,
-                marginRate: Number(rowData[17]) || 0,
-                totalProfit: Number(rowData[18]) || 0
+                totalCost: Number(rowData[14]) || 0,
+                shippingFee: Number(rowData[15]) || 0,
+                vatRefundAmount: Number(rowData[16]) || 0,
+                marginRate: Number(rowData[17]) || 0,    // 마진율이 먼저
+                marginAmount: Number(rowData[18]) || 0,  // 마진금액이 나중
+                totalProfit: Number(rowData[19]) || 0
               }
             };
 
@@ -1185,13 +1245,19 @@
           return;
         }
 
+        // 현재 환율로 모든 데이터 업데이트
+        const currentExchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+        importedData.forEach(data => {
+          data.inputs.exchangeRate = currentExchangeRate;
+        });
+
         // 기존 데이터 삭제 후 새 데이터 저장
         localStorage.setItem('marginCalculations', JSON.stringify(importedData));
 
         // 화면 업데이트
         loadSavedData();
 
-        alert(`성공적으로 가져왔습니다!\n가져온 데이터: ${rowCount}개`);
+        alert(`성공적으로 가져왔습니다!\n가져온 데이터: ${rowCount}개\n\n💡 모든 데이터의 환율이 현재 환율(${currentExchangeRate.toFixed(2)}원/엔)로 업데이트되었습니다.`);
 
       } catch (error) {
         console.error('파일 읽기 오류:', error);
