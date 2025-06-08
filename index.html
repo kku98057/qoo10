@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>큐텐 마진율 계산기</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <style>
     :root {
       --primary-color: #4A90E2;
@@ -170,6 +171,99 @@
       color: var(--danger-color);
     }
 
+    .saved-item {
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .saved-item h4 {
+      margin: 0 0 10px 0;
+      color: var(--primary-color);
+    }
+
+    .saved-item-data {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .saved-item-data p {
+      margin: 5px 0;
+      font-size: 0.9em;
+    }
+
+    .saved-item-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .saved-item-actions button {
+      padding: 8px 16px;
+      font-size: 0.9em;
+    }
+
+    .tab-container {
+      display: flex;
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+      padding: 5px;
+      margin-bottom: 20px;
+      gap: 5px;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 12px 20px;
+      background-color: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 500;
+      color: var(--text-color);
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .tab-button:hover:not(.active) {
+      background-color: rgba(74, 144, 226, 0.1);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* 스크롤바 스타일링 */
+    #savedDataList::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #savedDataList::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    #savedDataList::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 4px;
+    }
+
+    #savedDataList::-webkit-scrollbar-thumb:hover {
+      background: #4a9eff;
+    }
+
     @media (max-width: 768px) {
       body {
         padding: 10px;
@@ -191,109 +285,142 @@
   <div class="container">
     <h1>큐텐 마진율 계산기</h1>
 
-    <div class="mode-selector">
-      <input type="radio" name="calcMode" value="margin" id="marginMode" checked>
-      <label for="marginMode">마진율 계산</label>
+    <div class="tab-container">
+      <button class="tab-button active" onclick="switchTab('calculator', this)">🧮 계산기</button>
+      <button class="tab-button" onclick="switchTab('saved-list', this)">📋 저장 목록</button>
     </div>
 
-    <div class="input-group">
-      <label for="exchangeRate">환율 (원/엔)</label>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <input type="number" id="exchangeRate" step="0.01" readonly>
-        <button onclick="updateExchangeRate()" style="width: auto; padding: 12px 20px;">환율 업데이트</button>
-      </div>
-      <small style="color: #666; display: block; margin-top: 5px;">마지막 업데이트: <span id="lastUpdateTime">-</span></small>
-    </div>
+    <div id="calculator-tab" class="tab-content active">
 
-    <div class="input-group">
-      <label for="productPrice">제품 원가 (원)</label>
-      <input type="number" id="productPrice" placeholder="제품의 원가를 원화로 입력하세요">
-    </div>
 
-    <div id="marginModeInputs">
       <div class="input-group">
-        <label>판매가</label>
+        <label for="exchangeRate">환율 (원/엔)</label>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <div style="flex: 1;">
-            <input type="number" id="sellingPriceKRW" placeholder="판매가를 원화로 입력하세요" oninput="convertToJPY(this.value)">
-            <small style="color: #666;">원화</small>
+          <input type="number" id="exchangeRate" step="0.01" readonly>
+          <button onclick="updateExchangeRate()" style="width: auto; padding: 12px 20px;">환율 업데이트</button>
+        </div>
+        <small style="color: #666; display: block; margin-top: 5px;">마지막 업데이트: <span
+            id="lastUpdateTime">-</span></small>
+      </div>
+
+      <div class="input-group">
+        <label for="productPrice">제품 원가 (원)</label>
+        <input type="number" id="productPrice" placeholder="제품의 원가를 원화로 입력하세요">
+      </div>
+
+      <div id="marginModeInputs">
+        <div class="input-group">
+          <label>판매가</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div style="flex: 1;">
+              <input type="number" id="sellingPriceKRW" placeholder="판매가를 원화로 입력하세요" oninput="convertToJPY(this.value)">
+              <small style="color: #666;">원화</small>
+            </div>
+            <div style="flex: 1;">
+              <input type="number" id="sellingPriceJPY" placeholder="판매가를 엔화로 입력하세요" oninput="convertToKRW(this.value)">
+              <small style="color: #666;">엔화</small>
+            </div>
           </div>
-          <div style="flex: 1;">
-            <input type="number" id="sellingPriceJPY" placeholder="판매가를 엔화로 입력하세요" oninput="convertToKRW(this.value)">
-            <small style="color: #666;">엔화</small>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="discountRate">할인율 (%)</label>
+        <input type="number" id="discountRate" value="0" min="0" max="100" step="0.01" placeholder="할인율을 입력하세요">
+      </div>
+
+      <div class="input-group">
+        <label for="additionalCost">부자재 비용 (원)</label>
+        <input type="number" id="additionalCost" value="0" placeholder="추가 비용을 입력하세요">
+      </div>
+
+      <div class="input-group">
+        <label for="vatRefund">부가세 환급률 (%)</label>
+        <input type="number" id="vatRefund" value="10" min="0" max="100" step="0.01" placeholder="부가세 환급률을 입력하세요">
+      </div>
+
+      <div class="input-group">
+        <label for="shippingProvider">배송대행지</label>
+        <select id="shippingProvider">
+          <option value="KSE_air">KSE 항공</option>
+          <option value="KSE_sea">KSE 해상</option>
+          <option value="Synergy_slim">Synergy 슬림</option>
+          <option value="Synergy_svip">Synergy SVIP</option>
+          <option value="Trackslosis">트랙슬로시스</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="weight">무게 (kg)</label>
+        <input type="number" id="weight" step="0.01" placeholder="무게를 입력하세요">
+      </div>
+
+      <div class="input-group">
+        <label for="coupangFee">큐텐 수수료 (%)</label>
+        <input type="number" id="coupangFee" value="10" min="0" max="100" step="0.01" placeholder="큐텐 수수료를 입력하세요">
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button onclick="calculate()" style="flex: 1;">계산하기</button>
+        <button onclick="resetForm()" style="flex: 1; background-color: #95a5a6;">🔄 초기화</button>
+      </div>
+
+      <div id="result">
+
+
+        <div class="result-section">
+          <h3>비용 계산</h3>
+          <p><span class="label">총 구매 금액</span> <span class="value" id="totalPriceKRW"></span></p>
+          <p><span class="label">부자재 비용</span> <span class="value" id="totalAdditionalCost"></span></p>
+          <p><span class="label">배송비</span> <span class="value" id="shippingFee"></span></p>
+
+          <p><span class="label">총 비용</span> <span class="value" id="totalCost"></span></p>
+        </div>
+
+        <div class="result-section">
+          <h3>수익 계산</h3>
+          <p><span class="label">판매가(엔)</span> <span class="value" id="resultSellingPriceJPY"></span></p>
+          <p><span class="label">판매가(원)</span> <span class="value" id="resultSellingPriceKRW"></span></p>
+          <p><span class="label">할인 금액</span> <span class="value" id="discountAmount"></span></p>
+          <p><span class="label">실제 판매가</span> <span class="value" id="actualSellingPrice"></span></p>
+          <p><span class="label">큐텐 수수료</span> <span class="value" id="coupangFeeAmount"></span></p>
+        </div>
+
+        <div class="result-section">
+          <h3>최종 결과</h3>
+          <p><span class="label">마진 금액</span> <span class="value" id="marginAmount"></span></p>
+          <p><span class="label">마진율</span> <span class="value" id="marginRate"></span></p>
+          <p><span class="label">부가세 환급</span> <span class="value positive" id="vatRefundAmount">-</span></p>
+          <p style="border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 10px;"><span
+              class="label" style="font-weight: 700; font-size: 1.1em;">실제 수익 (마진+환급)</span> <span class="value"
+              style="font-weight: 700; font-size: 1.1em;" id="totalProfit"></span></p>
+
+          <div style="margin-top: 20px; text-align: center;">
+            <button onclick="saveCalculation()"
+              style="background-color: var(--success-color); padding: 15px 30px; font-size: 1.1em;" disabled
+              id="saveBtn">📌 이 계산 저장하기</button>
           </div>
+
         </div>
       </div>
     </div>
 
-    <div class="input-group">
-      <label for="discountRate">할인율 (%)</label>
-      <input type="number" id="discountRate" value="0" min="0" max="100" step="0.01" placeholder="할인율을 입력하세요">
-    </div>
-
-    <div class="input-group">
-      <label for="additionalCost">부자재 비용 (원)</label>
-      <input type="number" id="additionalCost" value="0" placeholder="추가 비용을 입력하세요">
-    </div>
-
-    <div class="input-group">
-      <label for="vatRefund">부가세 환급률 (%)</label>
-      <input type="number" id="vatRefund" value="10" min="0" max="100" step="0.01" placeholder="부가세 환급률을 입력하세요">
-    </div>
-
-    <div class="input-group">
-      <label for="shippingProvider">배송대행지</label>
-      <select id="shippingProvider">
-        <option value="KSE_air">KSE 항공</option>
-        <option value="KSE_sea">KSE 해상</option>
-        <option value="Synergy_slim">Synergy 슬림</option>
-        <option value="Synergy_svip">Synergy SVIP</option>
-        <option value="Trackslosis">트랙슬로시스</option>
-      </select>
-    </div>
-
-    <div class="input-group">
-      <label for="weight">무게 (kg)</label>
-      <input type="number" id="weight" step="0.01" placeholder="무게를 입력하세요">
-    </div>
-
-    <div class="input-group">
-      <label for="coupangFee">큐텐 수수료 (%)</label>
-      <input type="number" id="coupangFee" value="10" min="0" max="100" step="0.01" placeholder="큐텐 수수료를 입력하세요">
-    </div>
-
-    <button onclick="calculate()">계산하기</button>
-
-    <div id="result">
-
-
-      <div class="result-section">
-        <h3>비용 계산</h3>
-        <p><span class="label">총 구매 금액</span> <span class="value" id="totalPriceKRW"></span></p>
-        <p><span class="label">부자재 비용</span> <span class="value" id="totalAdditionalCost"></span></p>
-        <p><span class="label">배송비</span> <span class="value" id="shippingFee"></span></p>
-
-        <p><span class="label">총 비용</span> <span class="value" id="totalCost"></span></p>
+    <div id="saved-list-tab" class="tab-content">
+      <!-- 상단 고정 영역 -->
+      <div
+        style=" background-color: white; z-index: 10; padding: 20px 0; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+        <h2 style="margin: 0 0 15px 0;">저장된 계산 목록</h2>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="exportToExcel()" style="background-color: var(--success-color); flex: 1; padding: 12px;">📊
+            엑셀로 내보내기</button>
+          <button onclick="clearAllData()" style="background-color: var(--danger-color); flex: 1; padding: 12px;">🗑️ 전체
+            삭제</button>
+        </div>
       </div>
 
-      <div class="result-section">
-        <h3>수익 계산</h3>
-        <p><span class="label">판매가(엔)</span> <span class="value" id="resultSellingPriceJPY"></span></p>
-        <p><span class="label">판매가(원)</span> <span class="value" id="resultSellingPriceKRW"></span></p>
-        <p><span class="label">할인 금액</span> <span class="value" id="discountAmount"></span></p>
-        <p><span class="label">실제 판매가</span> <span class="value" id="actualSellingPrice"></span></p>
-        <p><span class="label">큐텐 수수료</span> <span class="value" id="coupangFeeAmount"></span></p>
-      </div>
-
-      <div class="result-section">
-        <h3>최종 결과</h3>
-        <p><span class="label">마진 금액</span> <span class="value" id="marginAmount"></span></p>
-        <p><span class="label">마진율</span> <span class="value" id="marginRate"></span></p>
-        <p><span class="label">부가세 환급</span> <span class="value positive" id="vatRefundAmount">-</span></p>
-        <p style="border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 10px;"><span class="label"
-            style="font-weight: 700; font-size: 1.1em;">실제 수익 (마진+환급)</span> <span class="value"
-            style="font-weight: 700; font-size: 1.1em;" id="totalProfit"></span></p>
-
+      <!-- 스크롤 가능한 데이터 목록 영역 -->
+      <div id="savedDataList" style="max-height: calc(90vh - 300px); overflow-y: auto; padding-right: 10px;">
+        <!-- 저장된 데이터가 여기에 표시됩니다 -->
       </div>
     </div>
   </div>
@@ -392,8 +519,40 @@
 
     }
 
-    // 페이지 로드 시 환율 자동 업데이트
-    window.addEventListener('load', updateExchangeRate);
+    // 탭 전환 기능
+    function switchTab(tabName, clickedButton = null) {
+      // 모든 탭 버튼의 active 클래스 제거
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      // 모든 탭 컨텐츠 숨기기
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      // 선택된 탭 버튼에 active 클래스 추가
+      if (clickedButton) {
+        clickedButton.classList.add('active');
+      } else {
+        // 프로그래밍 방식으로 호출된 경우, 해당 탭 버튼 찾아서 활성화
+        const tabButtons = document.querySelectorAll('.tab-button');
+        if (tabName === 'calculator') {
+          tabButtons[0].classList.add('active');
+        } else if (tabName === 'saved-list') {
+          tabButtons[1].classList.add('active');
+        }
+      }
+
+      // 선택된 탭 컨텐츠 보이기
+      document.getElementById(tabName + '-tab').classList.add('active');
+
+      // 저장 목록 탭으로 전환시 데이터 로드
+      if (tabName === 'saved-list') {
+        loadSavedData();
+      }
+    }
+
+    // 페이지 로드 시 환율 자동 업데이트 및 저장된 데이터 로드
+    window.addEventListener('load', function () {
+      updateExchangeRate();
+      loadSavedData();
+    });
 
     // 환율 변환 함수들
     function convertToJPY(krwValue) {
@@ -486,6 +645,9 @@
 
       document.getElementById('result').style.display = 'block';
       updateResultStyles(marginAmount, marginRate, totalProfit);
+
+      // 저장하기 버튼 활성화
+      document.getElementById('saveBtn').disabled = false;
     }
 
     function updateResultStyles(marginAmount, marginRate, totalProfit) {
@@ -496,6 +658,292 @@
       marginAmountElement.className = marginAmount >= 0 ? 'value positive' : 'value negative';
       marginRateElement.className = marginRate >= 0 ? 'value positive' : 'value negative';
       totalProfitElement.className = totalProfit >= 0 ? 'value positive' : 'value negative';
+    }
+
+    // 계산 결과 저장
+    function saveCalculation() {
+      const productName = prompt('제품명을 입력하세요 (필수):');
+
+      // 취소하거나 빈 값인 경우 저장하지 않음
+      if (!productName) {
+        alert('취소되었습니다');
+        return;
+      }
+      if (productName.trim() === '') {
+        alert('제품명을 입력해야 저장할 수 있습니다.');
+        return;
+      }
+
+      const data = {
+        id: Date.now(),
+        productName: productName,
+        savedAt: new Date().toLocaleString(),
+        inputs: {
+          exchangeRate: parseFloat(document.getElementById('exchangeRate').value),
+          productPrice: parseFloat(document.getElementById('productPrice').value),
+          sellingPriceKRW: parseFloat(document.getElementById('sellingPriceKRW').value),
+          sellingPriceJPY: parseFloat(document.getElementById('sellingPriceJPY').value),
+          discountRate: parseFloat(document.getElementById('discountRate').value) || 0,
+          additionalCost: parseFloat(document.getElementById('additionalCost').value) || 0,
+          weight: parseFloat(document.getElementById('weight').value) || 0,
+          shippingProvider: document.getElementById('shippingProvider').value,
+          coupangFeeRate: parseFloat(document.getElementById('coupangFee').value) || 0
+        },
+        results: {
+          totalCost: parseFloat(document.getElementById('totalCost').textContent.replace(/[원,]/g, '')),
+          shippingFee: parseFloat(document.getElementById('shippingFee').textContent.replace(/[원,]/g, '')),
+          vatRefundAmount: parseFloat(document.getElementById('vatRefundAmount').textContent.replace(/[+원,]/g, '')),
+          marginAmount: parseFloat(document.getElementById('marginAmount').textContent.replace(/[원,]/g, '')),
+          marginRate: parseFloat(document.getElementById('marginRate').textContent.replace(/%/g, '')),
+          totalProfit: parseFloat(document.getElementById('totalProfit').textContent.replace(/[원,]/g, ''))
+        }
+      };
+
+      // 로컬스토리지에서 기존 데이터 가져오기
+      const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+      savedData.push(data);
+
+      // 로컬스토리지에 저장
+      localStorage.setItem('marginCalculations', JSON.stringify(savedData));
+
+      alert('계산 결과가 저장되었습니다!');
+      loadSavedData();
+    }
+
+    // 저장된 데이터 로드
+    function loadSavedData() {
+      const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+      const list = document.getElementById('savedDataList');
+
+      if (savedData.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">저장된 계산이 없습니다.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+
+      savedData.reverse().forEach(data => {
+        const item = document.createElement('div');
+        item.className = 'saved-item';
+        item.innerHTML = `
+          <h4>${data.productName}</h4>
+          <p style="color: #666; font-size: 0.8em; margin-bottom: 10px;">저장일시: ${data.savedAt}</p>
+          <div class="saved-item-data">
+            <p><strong>제품원가:</strong> ${data.inputs.productPrice.toLocaleString()}원</p>
+            <p><strong>판매가:</strong> ${data.inputs.sellingPriceKRW.toLocaleString()}원 (${data.inputs.sellingPriceJPY}엔)</p>
+            <p><strong>총비용:</strong> ${data.results.totalCost.toLocaleString()}원</p>
+            <p><strong>마진:</strong> ${data.results.marginAmount.toLocaleString()}원 (${data.results.marginRate.toFixed(2)}%)</p>
+            <p><strong>부가세환급:</strong> +${data.results.vatRefundAmount.toLocaleString()}원</p>
+            <p><strong>실제수익:</strong> ${data.results.totalProfit.toLocaleString()}원</p>
+          </div>
+          <div class="saved-item-actions">
+            <button onclick="loadCalculation(${data.id})" style="background-color: var(--primary-color);">불러오기</button>
+            <button onclick="deleteSavedItem(${data.id})" style="background-color: var(--danger-color);">삭제</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // 저장된 계산 불러오기
+    function loadCalculation(id) {
+      const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+      const data = savedData.find(item => item.id === id);
+
+      if (!data) return;
+
+      // 계산기 탭으로 자동 전환
+      switchTab('calculator');
+
+      // 입력 필드에 값 설정
+      document.getElementById('exchangeRate').value = data.inputs.exchangeRate;
+      document.getElementById('productPrice').value = data.inputs.productPrice;
+      document.getElementById('sellingPriceKRW').value = data.inputs.sellingPriceKRW;
+      document.getElementById('sellingPriceJPY').value = data.inputs.sellingPriceJPY;
+      document.getElementById('discountRate').value = data.inputs.discountRate;
+      document.getElementById('additionalCost').value = data.inputs.additionalCost;
+      document.getElementById('weight').value = data.inputs.weight;
+      document.getElementById('shippingProvider').value = data.inputs.shippingProvider;
+      document.getElementById('coupangFee').value = data.inputs.coupangFeeRate;
+
+      // 자동으로 계산 실행
+      calculate();
+
+      alert('계산 데이터를 불러왔습니다!');
+    }
+
+    // 저장된 항목 삭제
+    function deleteSavedItem(id) {
+      if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+
+      const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+      const filteredData = savedData.filter(item => item.id !== id);
+      localStorage.setItem('marginCalculations', JSON.stringify(filteredData));
+
+      loadSavedData();
+    }
+
+    // 전체 데이터 삭제
+    function clearAllData() {
+      if (!confirm('모든 저장된 데이터를 삭제하시겠습니까?')) return;
+
+      localStorage.removeItem('marginCalculations');
+      loadSavedData();
+      alert('모든 데이터가 삭제되었습니다.');
+    }
+
+    // 폼 초기화 함수
+    function resetForm() {
+      if (!confirm('모든 입력 내용을 초기화하시겠습니까?')) {
+        return;
+      }
+
+      // 입력 필드 초기화 (환율 제외)
+      document.getElementById('productPrice').value = '';
+      document.getElementById('sellingPriceKRW').value = '';
+      document.getElementById('sellingPriceJPY').value = '';
+      document.getElementById('discountRate').value = '0';
+      document.getElementById('additionalCost').value = '0';
+      document.getElementById('weight').value = '';
+      document.getElementById('shippingProvider').selectedIndex = 0;
+      document.getElementById('coupangFee').value = '10';
+
+      // 결과 화면 숨기기
+      document.getElementById('result').style.display = 'none';
+
+      // 저장 버튼 비활성화
+      document.getElementById('saveBtn').disabled = true;
+
+      alert('입력 내용이 초기화되었습니다.');
+    }
+
+    // 엑셀로 내보내기 함수 (ExcelJS 사용)
+    async function exportToExcel() {
+      const savedData = JSON.parse(localStorage.getItem('marginCalculations') || '[]');
+
+      if (savedData.length === 0) {
+        alert('내보낼 데이터가 없습니다.');
+        return;
+      }
+
+      // ExcelJS 워크북 생성
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('큐텐 마진율 계산');
+
+      // 헤더 정의
+      const headers = [
+        '순번', '제품명', '저장일시', '환율', '제품원가', '판매가(원)', '판매가(엔)',
+        '할인율(%)', '부자재비용', '무게(kg)', '배송대행지', '큐텐수수료(%)',
+        '총비용', '배송비', '부가세환급', '마진금액', '마진율(%)', '실제수익'
+      ];
+
+      // 헤더 추가
+      worksheet.addRow(headers);
+
+      // 헤더 스타일링 (볼드체, 배경색, 테두리)
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4472C4' }
+        };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+
+      // 데이터 추가
+      savedData.forEach((item, index) => {
+        const row = [
+          index + 1,
+          item.productName,
+          item.savedAt,
+          item.inputs.exchangeRate,
+          item.inputs.productPrice,
+          item.inputs.sellingPriceKRW,
+          item.inputs.sellingPriceJPY,
+          item.inputs.discountRate,
+          item.inputs.additionalCost,
+          item.inputs.weight,
+          getShippingProviderName(item.inputs.shippingProvider),
+          item.inputs.coupangFeeRate,
+          item.results.totalCost,
+          item.results.shippingFee,
+          item.results.vatRefundAmount,
+          item.results.marginAmount,
+          item.results.marginRate.toFixed(2),
+          item.results.totalProfit
+        ];
+
+        const dataRow = worksheet.addRow(row);
+
+        // 데이터 행 스타일링
+        dataRow.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+      });
+
+      // 컬럼 너비 설정
+      worksheet.columns = [
+        { width: 8 },   // 순번
+        { width: 25 },  // 제품명
+        { width: 20 },  // 저장일시
+        { width: 10 },  // 환율
+        { width: 12 },  // 제품원가
+        { width: 12 },  // 판매가(원)
+        { width: 12 },  // 판매가(엔)
+        { width: 12 },  // 할인율
+        { width: 12 },  // 부자재비용
+        { width: 10 },  // 무게
+        { width: 18 },  // 배송대행지
+        { width: 14 },  // 큐텐수수료
+        { width: 12 },  // 총비용
+        { width: 12 },  // 배송비
+        { width: 12 },  // 부가세환급
+        { width: 12 },  // 마진금액
+        { width: 12 },  // 마진율
+        { width: 12 }   // 실제수익
+      ];
+
+      // 파일명 생성 (현재 날짜/시간 포함)
+      const now = new Date();
+      const fileName = `큐텐_마진율_계산_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.xlsx`;
+
+      // 파일 다운로드
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      alert(`엑셀 파일이 다운로드되었습니다!\n파일명: ${fileName}`);
+    }
+
+    // 배송대행지 코드를 한글명으로 변환
+    function getShippingProviderName(code) {
+      const providers = {
+        'KSE_air': 'KSE 항공',
+        'KSE_sea': 'KSE 해상',
+        'Synergy_slim': 'Synergy 슬림',
+        'Synergy_svip': 'Synergy SVIP',
+        'Trackslosis': '트랙슬로시스'
+      };
+      return providers[code] || code;
     }
   </script>
 </body>
