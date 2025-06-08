@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>큐텐 마진율 계산기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --secondary-color: #F5F7FA;
+      --text-color: #2C3E50;
+      --border-color: #E1E8ED;
+      --success-color: #2ECC71;
+      --danger-color: #E74C3C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #F8F9FA;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 30px;
+      font-size: 2.2em;
+    }
+
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+    }
+
+    .mode-selector label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background-color: white;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mode-selector input[type="radio"] {
+      display: none;
+    }
+
+    .mode-selector input[type="radio"]:checked+label {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 1em;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.1em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #357ABD;
+    }
+
+    #result {
+      display: none;
+      margin-top: 30px;
+    }
+
+    .result-section {
+      background-color: var(--secondary-color);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .result-section h3 {
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+
+    .result-section p {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .result-section p:last-child {
+      border-bottom: none;
+    }
+
+    .result-section .label {
+      font-weight: 500;
+    }
+
+    .result-section .value {
+      font-weight: 700;
+    }
+
+    .positive {
+      color: var(--success-color);
+    }
+
+    .negative {
+      color: var(--danger-color);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      .mode-selector {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>큐텐 마진율 계산기</h1>
+
+    <div class="mode-selector">
+      <input type="radio" name="calcMode" value="margin" id="marginMode" checked>
+      <label for="marginMode">마진율 계산</label>
+    </div>
+
+    <div class="input-group">
+      <label for="exchangeRate">환율 (원/엔)</label>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="number" id="exchangeRate" step="0.01" readonly>
+        <button onclick="updateExchangeRate()" style="width: auto; padding: 12px 20px;">환율 업데이트</button>
+      </div>
+      <small style="color: #666; display: block; margin-top: 5px;">마지막 업데이트: <span id="lastUpdateTime">-</span></small>
+    </div>
+
+    <div class="input-group">
+      <label for="productPrice">제품 원가 (원)</label>
+      <input type="number" id="productPrice" placeholder="제품의 원가를 원화로 입력하세요">
+    </div>
+
+    <div id="marginModeInputs">
+      <div class="input-group">
+        <label>판매가</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div style="flex: 1;">
+            <input type="number" id="sellingPriceKRW" placeholder="판매가를 원화로 입력하세요" oninput="convertToJPY(this.value)">
+            <small style="color: #666;">원화</small>
+          </div>
+          <div style="flex: 1;">
+            <input type="number" id="sellingPriceJPY" placeholder="판매가를 엔화로 입력하세요" oninput="convertToKRW(this.value)">
+            <small style="color: #666;">엔화</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="discountRate">할인율 (%)</label>
+      <input type="number" id="discountRate" value="0" min="0" max="100" step="0.01" placeholder="할인율을 입력하세요">
+    </div>
+
+    <div class="input-group">
+      <label for="additionalCost">부자재 비용 (원)</label>
+      <input type="number" id="additionalCost" value="0" placeholder="추가 비용을 입력하세요">
+    </div>
+
+    <div class="input-group">
+      <label for="vatRefund">부가세 환급률 (%)</label>
+      <input type="number" id="vatRefund" value="10" min="0" max="100" step="0.01" placeholder="부가세 환급률을 입력하세요">
+    </div>
+
+    <div class="input-group">
+      <label for="shippingProvider">배송대행지</label>
+      <select id="shippingProvider">
+        <option value="KSE_air">KSE 항공</option>
+        <option value="KSE_sea">KSE 해상</option>
+        <option value="Synergy_slim">Synergy 슬림</option>
+        <option value="Synergy_svip">Synergy SVIP</option>
+        <option value="Trackslosis">트랙슬로시스</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label for="weight">무게 (kg)</label>
+      <input type="number" id="weight" step="0.01" placeholder="무게를 입력하세요">
+    </div>
+
+    <div class="input-group">
+      <label for="coupangFee">큐텐 수수료 (%)</label>
+      <input type="number" id="coupangFee" value="10" min="0" max="100" step="0.01" placeholder="큐텐 수수료를 입력하세요">
+    </div>
+
+    <button onclick="calculate()">계산하기</button>
+
+    <div id="result">
+
+
+      <div class="result-section">
+        <h3>비용 계산</h3>
+        <p><span class="label">총 구매 금액</span> <span class="value" id="totalPriceKRW"></span></p>
+        <p><span class="label">부자재 비용</span> <span class="value" id="totalAdditionalCost"></span></p>
+        <p><span class="label">배송비</span> <span class="value" id="shippingFee"></span></p>
+
+        <p><span class="label">총 비용</span> <span class="value" id="totalCost"></span></p>
+      </div>
+
+      <div class="result-section">
+        <h3>수익 계산</h3>
+        <p><span class="label">판매가(엔)</span> <span class="value" id="resultSellingPriceJPY"></span></p>
+        <p><span class="label">판매가(원)</span> <span class="value" id="resultSellingPriceKRW"></span></p>
+        <p><span class="label">할인 금액</span> <span class="value" id="discountAmount"></span></p>
+        <p><span class="label">실제 판매가</span> <span class="value" id="actualSellingPrice"></span></p>
+        <p><span class="label">큐텐 수수료</span> <span class="value" id="coupangFeeAmount"></span></p>
+      </div>
+
+      <div class="result-section">
+        <h3>최종 결과</h3>
+        <p><span class="label">마진 금액</span> <span class="value" id="marginAmount"></span></p>
+        <p><span class="label">마진율</span> <span class="value" id="marginRate"></span></p>
+        <p><span class="label">부가세 환급</span> <span class="value positive" id="vatRefundAmount">-</span></p>
+        <p style="border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 10px;"><span class="label"
+            style="font-weight: 700; font-size: 1.1em;">실제 수익 (마진+환급)</span> <span class="value"
+            style="font-weight: 700; font-size: 1.1em;" id="totalProfit"></span></p>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMode() {
+      const mode = document.querySelector('input[name="calcMode"]:checked').value;
+      document.getElementById('marginModeInputs').style.display = mode === 'margin' ? 'block' : 'none';
+    }
+
+    // 배송비 요금표 데이터
+    const shippingRates = [
+      { weight_kg: 0.1, KSE_air: 490, KSE_sea: 450, Synergy_slim: 540, Synergy_svip: 465, Trackslosis: 540 },
+      { weight_kg: 0.25, KSE_air: 560, KSE_sea: 525, Synergy_slim: null, Synergy_svip: null, Trackslosis: null },
+      { weight_kg: 0.3, KSE_air: null, KSE_sea: null, Synergy_slim: 598, Synergy_svip: 523, Trackslosis: 590 },
+      { weight_kg: 0.5, KSE_air: 620, KSE_sea: 590, Synergy_slim: 665, Synergy_svip: 590, Trackslosis: 650 },
+      { weight_kg: 0.7, KSE_air: null, KSE_sea: null, Synergy_slim: 725, Synergy_svip: 650, Trackslosis: null },
+      { weight_kg: 0.75, KSE_air: 700, KSE_sea: 680, Synergy_slim: null, Synergy_svip: null, Trackslosis: 720 },
+      { weight_kg: 1, KSE_air: 750, KSE_sea: 720, Synergy_slim: 777, Synergy_svip: 702, Trackslosis: 770 },
+      { weight_kg: 1.25, KSE_air: 780, KSE_sea: 760, Synergy_slim: null, Synergy_svip: null, Trackslosis: null },
+      { weight_kg: 1.5, KSE_air: 830, KSE_sea: 810, Synergy_slim: 880, Synergy_svip: 805, Trackslosis: 850 },
+      { weight_kg: 1.75, KSE_air: 880, KSE_sea: 860, Synergy_slim: null, Synergy_svip: null, Trackslosis: null },
+      { weight_kg: 2, KSE_air: 940, KSE_sea: 910, Synergy_slim: 980, Synergy_svip: 905, Trackslosis: 960 },
+      { weight_kg: 2.5, KSE_air: 1090, KSE_sea: 950, Synergy_slim: 1130, Synergy_svip: 1055, Trackslosis: 1110 },
+      { weight_kg: 3, KSE_air: 1197, KSE_sea: 1020, Synergy_slim: 1240, Synergy_svip: 1165, Trackslosis: 1167 }
+    ];
+
+    function calculateShippingFee(weight, shippingProvider, exchangeRate) {
+      if (!weight || weight <= 0) {
+        return { fee: 0, feeJPY: 0, weightRange: '0kg', provider: shippingProvider };
+      }
+
+      // 입력한 무게보다 큰 첫 번째 무게 구간을 찾기
+      let selectedRate = null;
+      for (let rate of shippingRates) {
+        if (weight <= rate.weight_kg && rate[shippingProvider] !== null) {
+          selectedRate = rate;
+          break;
+        }
+      }
+
+      // 해당 무게 구간이 없거나 요금이 null인 경우, 가장 큰 무게 구간 사용
+      if (!selectedRate) {
+        for (let i = shippingRates.length - 1; i >= 0; i--) {
+          if (shippingRates[i][shippingProvider] !== null) {
+            selectedRate = shippingRates[i];
+            break;
+          }
+        }
+      }
+
+      if (!selectedRate) {
+        return { fee: 0, feeJPY: 0, weightRange: '요금 정보 없음', provider: shippingProvider };
+      }
+
+      const feeJPY = selectedRate[shippingProvider];
+      const feeKRW = Math.round(feeJPY * exchangeRate);
+
+      return {
+        fee: feeKRW,
+        feeJPY: feeJPY,
+        weightRange: `${selectedRate.weight_kg}kg 기준`,
+        provider: shippingProvider
+      };
+    }
+
+    // 환율 API 호출 함수
+    async function fetchExchangeRate() {
+      try {
+        const response = await fetch('https://m.search.naver.com/p/csearch/content/qapirender.nhn?key=calculator&pkid=141&q=%ED%99%98%EC%9C%A8&where=m&u1=keb&u6=standardUnit&u7=0&u3=JPY&u4=KRW&u8=down&u2=1');
+        const data = await response.json();
+        if (data && data.country && data.country.length > 1) {
+          const rate = parseFloat(data.country[1].value);
+          document.getElementById('exchangeRate').value = rate;
+          document.getElementById('lastUpdateTime').textContent = new Date().toLocaleString();
+          return rate;
+        }
+      } catch (error) {
+        console.error('환율 정보를 가져오는데 실패했습니다:', error);
+        alert('환율 정보를 가져오는데 실패했습니다. 수동으로 입력해주세요.');
+      }
+      return null;
+    }
+
+    // 환율 업데이트 함수
+    async function updateExchangeRate(isAlert = false) {
+      const button = document.querySelector('button[onclick="updateExchangeRate()"]');
+      button.disabled = true;
+      button.textContent = '업데이트 중...';
+
+      const rate = await fetchExchangeRate();
+
+      button.disabled = false;
+      button.textContent = '환율 업데이트';
+
+
+    }
+
+    // 페이지 로드 시 환율 자동 업데이트
+    window.addEventListener('load', updateExchangeRate);
+
+    // 환율 변환 함수들
+    function convertToJPY(krwValue) {
+      if (!krwValue) {
+        document.getElementById('sellingPriceJPY').value = '';
+        return;
+      }
+      const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
+      if (exchangeRate) {
+        const jpyValue = Math.round(krwValue / exchangeRate);
+        document.getElementById('sellingPriceJPY').value = jpyValue;
+      }
+    }
+
+    function convertToKRW(jpyValue) {
+      if (!jpyValue) {
+        document.getElementById('sellingPriceKRW').value = '';
+        return;
+      }
+      const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
+      if (exchangeRate) {
+        const krwValue = Math.round(jpyValue * exchangeRate);
+        document.getElementById('sellingPriceKRW').value = krwValue;
+      }
+    }
+
+    function calculate() {
+      const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
+      const productPrice = parseFloat(document.getElementById('productPrice').value);
+      const discountRate = parseFloat(document.getElementById('discountRate').value) || 0;
+      const additionalCost = parseFloat(document.getElementById('additionalCost').value) || 0;
+      const vatRefundRate = parseFloat(document.getElementById('vatRefund').value) || 0;
+      const weight = parseFloat(document.getElementById('weight').value) || 0;
+      const shippingProvider = document.getElementById('shippingProvider').value;
+      const coupangFeeRate = parseFloat(document.getElementById('coupangFee').value) || 0;
+
+      if (!exchangeRate || !productPrice) {
+        alert('필수 항목(환율, 제품원가)을 입력해주세요.');
+        return;
+      }
+
+      if (!document.getElementById('sellingPriceKRW').value) {
+        alert('판매가를 입력해주세요.');
+        return;
+      }
+
+      if (!weight || weight <= 0) {
+        alert('무게를 입력해주세요.');
+        return;
+      }
+
+
+
+      // 배송비 계산
+      const shippingResult = calculateShippingFee(weight, shippingProvider, exchangeRate);
+
+      // 부가세 환급 계산 (부가세 포함가격 기준)
+      // 공급가액 = 부가세포함가격 ÷ 1.1, 매입세액 = 공급가액 × 0.1 = 부가세포함가격 ÷ 11
+      const vatRefundAmount = Math.round(productPrice / 11);
+
+      // 비용 계산
+      const totalCost = productPrice + additionalCost + shippingResult.fee;
+
+      // 판매가 계산
+      const sellingPriceKRW = parseFloat(document.getElementById('sellingPriceKRW').value);
+      const sellingPriceJPY = parseFloat(document.getElementById('sellingPriceJPY').value);
+      const discountAmount = sellingPriceKRW * (discountRate / 100);
+      const actualSellingPrice = sellingPriceKRW - discountAmount;
+      const coupangFeeAmount = actualSellingPrice * (coupangFeeRate / 100);
+      const marginAmount = actualSellingPrice - totalCost - coupangFeeAmount;
+      const marginRate = (marginAmount / totalCost) * 100;
+
+      // 실제 수익 (마진 + 부가세 환급)
+      const totalProfit = marginAmount + vatRefundAmount;
+
+      // 결과 표시
+      document.getElementById('totalPriceKRW').textContent = productPrice.toLocaleString() + '원';
+      document.getElementById('totalAdditionalCost').textContent = additionalCost.toLocaleString() + '원';
+      document.getElementById('shippingFee').textContent = shippingResult.fee.toLocaleString() + '원';
+      document.getElementById('vatRefundAmount').textContent = '+' + vatRefundAmount.toLocaleString() + '원';
+      document.getElementById('totalCost').textContent = totalCost.toLocaleString() + '원';
+      document.getElementById('resultSellingPriceJPY').textContent = sellingPriceJPY.toFixed(0) + '엔';
+      document.getElementById('resultSellingPriceKRW').textContent = sellingPriceKRW.toLocaleString() + '원';
+      document.getElementById('discountAmount').textContent = discountAmount.toLocaleString() + '원';
+      document.getElementById('actualSellingPrice').textContent = actualSellingPrice.toLocaleString() + '원';
+      document.getElementById('coupangFeeAmount').textContent = coupangFeeAmount.toLocaleString() + '원';
+      document.getElementById('marginAmount').textContent = marginAmount.toLocaleString() + '원';
+      document.getElementById('marginRate').textContent = marginRate.toFixed(2) + '%';
+      document.getElementById('totalProfit').textContent = totalProfit.toLocaleString() + '원';
+
+      document.getElementById('result').style.display = 'block';
+      updateResultStyles(marginAmount, marginRate, totalProfit);
+    }
+
+    function updateResultStyles(marginAmount, marginRate, totalProfit) {
+      const marginAmountElement = document.getElementById('marginAmount');
+      const marginRateElement = document.getElementById('marginRate');
+      const totalProfitElement = document.getElementById('totalProfit');
+
+      marginAmountElement.className = marginAmount >= 0 ? 'value positive' : 'value negative';
+      marginRateElement.className = marginRate >= 0 ? 'value positive' : 'value negative';
+      totalProfitElement.className = totalProfit >= 0 ? 'value positive' : 'value negative';
+    }
+  </script>
+</body>
+
+</html>
