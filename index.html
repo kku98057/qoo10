@@ -436,13 +436,14 @@
         <div class="input-group">
           <label>판매가</label>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <div style="flex: 1;">
-              <input type="number" id="sellingPriceKRW" placeholder="판매가를 원화로 입력하세요" oninput="convertToJPY(this.value)">
-              <small style="color: #666;">원화</small>
-            </div>
+
             <div style="flex: 1;">
               <input type="number" id="sellingPriceJPY" placeholder="판매가를 엔화로 입력하세요" oninput="convertToKRW(this.value)">
               <small style="color: #666;">엔화</small>
+            </div>
+            <div style="flex: 1;">
+              <input type="number" id="sellingPriceKRW" placeholder="판매가를 원화로 입력하세요" oninput="convertToJPY(this.value)">
+              <small style="color: #666;">원화</small>
             </div>
           </div>
         </div>
