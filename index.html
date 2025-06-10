@@ -469,8 +469,9 @@
         <select id="shippingProvider">
           <option value="KSE_air">KSE 항공</option>
           <option value="KSE_sea">KSE 해상</option>
-          <option value="Synergy_slim">Synergy 슬림</option>
-          <option value="Synergy_svip">Synergy SVIP</option>
+          <option value="KSE_light">KSE 라이트</option>
+          <option value="shipnergy_slim">shipnergy 슬림</option>
+          <option value="shipnergy_svip">shipnergy SVIP</option>
           <option value="Trackslosis">트랙슬로시스</option>
         </select>
       </div>
@@ -617,19 +618,43 @@
 
     // 배송비 요금표 데이터
     const shippingRates = [
-      { weight_kg: 0.1, KSE_air: 490, KSE_sea: 450, Synergy_slim: 540, Synergy_svip: 465, Trackslosis: 540 },
-      { weight_kg: 0.25, KSE_air: 560, KSE_sea: 525, Synergy_slim: null, Synergy_svip: null, Trackslosis: null },
-      { weight_kg: 0.3, KSE_air: null, KSE_sea: null, Synergy_slim: 598, Synergy_svip: 523, Trackslosis: 590 },
-      { weight_kg: 0.5, KSE_air: 620, KSE_sea: 590, Synergy_slim: 665, Synergy_svip: 590, Trackslosis: 650 },
-      { weight_kg: 0.7, KSE_air: null, KSE_sea: null, Synergy_slim: 725, Synergy_svip: 650, Trackslosis: null },
-      { weight_kg: 0.75, KSE_air: 700, KSE_sea: 680, Synergy_slim: null, Synergy_svip: null, Trackslosis: 720 },
-      { weight_kg: 1, KSE_air: 750, KSE_sea: 720, Synergy_slim: 777, Synergy_svip: 702, Trackslosis: 770 },
-      { weight_kg: 1.25, KSE_air: 780, KSE_sea: 760, Synergy_slim: null, Synergy_svip: null, Trackslosis: null },
-      { weight_kg: 1.5, KSE_air: 830, KSE_sea: 810, Synergy_slim: 880, Synergy_svip: 805, Trackslosis: 850 },
-      { weight_kg: 1.75, KSE_air: 880, KSE_sea: 860, Synergy_slim: null, Synergy_svip: null, Trackslosis: null },
-      { weight_kg: 2, KSE_air: 940, KSE_sea: 910, Synergy_slim: 980, Synergy_svip: 905, Trackslosis: 960 },
-      { weight_kg: 2.5, KSE_air: 1090, KSE_sea: 950, Synergy_slim: 1130, Synergy_svip: 1055, Trackslosis: 1110 },
-      { weight_kg: 3, KSE_air: 1197, KSE_sea: 1020, Synergy_slim: 1240, Synergy_svip: 1165, Trackslosis: 1167 }
+      { weight_kg: 0.1, KSE_air: 490, KSE_sea: 450, KSE_light: 350, shipnergy_slim: 540, shipnergy_svip: 465, Trackslosis: 540 },
+      { weight_kg: 0.25, KSE_air: 560, KSE_sea: 525, KSE_light: 400, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 0.3, KSE_air: null, KSE_sea: null, KSE_light: null, shipnergy_slim: 598, shipnergy_svip: 523, Trackslosis: 590 },
+      { weight_kg: 0.5, KSE_air: 620, KSE_sea: 590, KSE_light: 460, shipnergy_slim: 665, shipnergy_svip: 590, Trackslosis: 650 },
+      { weight_kg: 0.7, KSE_air: null, KSE_sea: null, KSE_light: null, shipnergy_slim: 725, shipnergy_svip: 650, Trackslosis: null },
+      { weight_kg: 0.75, KSE_air: 700, KSE_sea: 680, KSE_light: 490, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: 720 },
+      { weight_kg: 1, KSE_air: 750, KSE_sea: 720, KSE_light: 530, shipnergy_slim: 777, shipnergy_svip: 702, Trackslosis: 770 },
+      { weight_kg: 1.25, KSE_air: 780, KSE_sea: 760, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 1.5, KSE_air: 830, KSE_sea: 810, KSE_light: null, shipnergy_slim: 880, shipnergy_svip: 805, Trackslosis: 850 },
+      { weight_kg: 1.75, KSE_air: 880, KSE_sea: 860, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 2, KSE_air: 940, KSE_sea: 910, KSE_light: null, shipnergy_slim: 980, shipnergy_svip: 905, Trackslosis: 960 },
+      { weight_kg: 2.5, KSE_air: 1090, KSE_sea: 950, KSE_light: null, shipnergy_slim: 1130, shipnergy_svip: 1055, Trackslosis: 1110 },
+      { weight_kg: 3, KSE_air: 1197, KSE_sea: 1020, KSE_light: null, shipnergy_slim: 1240, shipnergy_svip: 1165, Trackslosis: 1167 },
+      { weight_kg: 3.5, KSE_air: 1302, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 4, KSE_air: 1402, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 4.5, KSE_air: 1498, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 5, KSE_air: 1597, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 5.5, KSE_air: 1806, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 6, KSE_air: 1906, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 6.5, KSE_air: 2003, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 7, KSE_air: 2099, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 7.5, KSE_air: 2195, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 8, KSE_air: 2291, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 8.5, KSE_air: 2397, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 9, KSE_air: 2494, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 9.5, KSE_air: 2590, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 10, KSE_air: 2684, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 10.5, KSE_air: 2965, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 11, KSE_air: 3061, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 11.5, KSE_air: 3164, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 12, KSE_air: 3264, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 12.5, KSE_air: 3360, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 13, KSE_air: 3456, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 13.5, KSE_air: 3552, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 14, KSE_air: 3652, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 14.5, KSE_air: 3748, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null },
+      { weight_kg: 15, KSE_air: 3845, KSE_sea: null, KSE_light: null, shipnergy_slim: null, shipnergy_svip: null, Trackslosis: null }
     ];
 
     function calculateShippingFee(weight, shippingProvider, exchangeRate) {
@@ -1047,7 +1072,7 @@
       console.log(`불러오기 - 저장된 배송대행지: "${shippingProvider}"`);
 
       const shippingSelect = document.getElementById('shippingProvider');
-      const validOptions = ['KSE_air', 'KSE_sea', 'Synergy_slim', 'Synergy_svip', 'Trackslosis'];
+      const validOptions = ['KSE_air', 'KSE_sea', 'Shipnergy_slim', 'Shipnergy_svip', 'Trackslosis'];
 
       if (validOptions.includes(shippingProvider)) {
         shippingSelect.value = shippingProvider;
@@ -1304,8 +1329,9 @@
       const providers = {
         'KSE_air': 'KSE 항공',
         'KSE_sea': 'KSE 해상',
-        'Synergy_slim': 'Synergy 슬림',
-        'Synergy_svip': 'Synergy SVIP',
+        'KSE_light': 'KSE 라이트',
+        'shipnergy_slim': 'shipnergy 슬림',
+        'shipnergy_svip': 'shipnergy SVIP',
         'Trackslosis': '트랙슬로시스'
       };
       return providers[code] || code;
@@ -1316,8 +1342,9 @@
       const providers = {
         'KSE 항공': 'KSE_air',
         'KSE 해상': 'KSE_sea',
-        'Synergy 슬림': 'Synergy_slim',
-        'Synergy SVIP': 'Synergy_svip',
+        'KSE 라이트': 'KSE_light',
+        'shipnergy 슬림': 'shipnergy_slim',
+        'shipnergy SVIP': 'shipnergy_svip',
         '트랙슬로시스': 'Trackslosis'
       };
 
@@ -1330,7 +1357,7 @@
       }
 
       // 이미 코드 형태인 경우 그대로 반환
-      const validCodes = ['KSE_air', 'KSE_sea', 'Synergy_slim', 'Synergy_svip', 'Trackslosis'];
+      const validCodes = ['KSE_air', 'KSE_sea', 'KSE_light', 'shipnergy_slim', 'shipnergy_svip', 'Trackslosis'];
       if (validCodes.includes(trimmedName)) {
         console.log(`배송대행지 코드 유지: "${trimmedName}"`);
         return trimmedName;
